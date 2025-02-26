@@ -18,9 +18,9 @@ def is_enabled(value, default):
 # Bot Information Configuration
 # ============================
 SESSION = environ.get('SESSION', 'Media_search')
-API_ID = int(environ.get('API_ID', ''))
-API_HASH = environ.get('API_HASH', '')
-BOT_TOKEN = environ.get('BOT_TOKEN', "")
+API_ID = int(environ.get('API_ID', '11472991'))
+API_HASH = environ.get('API_HASH', 'c78c50d54baf2173e8b3f75c359c0c72')
+BOT_TOKEN = environ.get('BOT_TOKEN', "8092382750:AAFWETjrLHmj2dih9RedU0m7ke0QaJQ4mmY")
 
 # ============================
 # Bot Settings Configuration
@@ -28,8 +28,8 @@ BOT_TOKEN = environ.get('BOT_TOKEN', "")
 CACHE_TIME = int(environ.get('CACHE_TIME', 300))
 USE_CAPTION_FILTER = bool(environ.get('USE_CAPTION_FILTER', True))
 
-PICS = (environ.get('PICS', 'https://envs.sh/WdA.jpg https://envs.sh/Wdj.jpg')).split()  # Sample pic
-NOR_IMG = environ.get("NOR_IMG", "https://envs.sh/Wdj.jpg")
+PICS = (environ.get('PICS', 'https://envs.sh/eIV.jpeg https://envs.sh/eIV.jpeg')).split()  # Sample pic
+NOR_IMG = environ.get("NOR_IMG", "https://envs.sh/eIV.jpeg")
 MELCOW_VID = environ.get("MELCOW_VID", "https://envs.sh/Wdj.jpg")
 SPELL_IMG = environ.get("SPELL_IMG", "https://envs.sh/Wdj.jpg")
 SUBSCRIPTION = (environ.get('SUBSCRIPTION', 'https://envs.sh/Wdj.jpg'))
