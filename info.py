@@ -67,10 +67,10 @@ APPROVED = environ.get("APPROVED_WELCOME", "on").lower()
 # ============================
 # MongoDB Configuration
 # ============================
-DATABASE_URI = environ.get('DATABASE_URI', "mongodb+srv://KarthikMovies:KarthikUK007@cluster0.4l5byki.mongodb.net/?retryWrites=true&w=majority")
-DATABASE_URI2 = environ.get('DATABASE_URI2', "mongodb+srv://KarthikMovies:KarthikUK007@cluster0.4l5byki.mongodb.net/?retryWrites=true&w=majority")
+DATABASE_URI = environ.get('DATABASE_URI', "mongodb+srv://sakthiraj940:vFGkAQL9n@mR9!4@cluster0.h75s7.mongodb.net/?retryWrites=true&w=majority")
+DATABASE_URI2 = environ.get('DATABASE_URI2', "mongodb+srv://sakthiraj940:vFGkAQL9n@mR9!4@cluster0.h75s7.mongodb.net/?retryWrites=true&w=majority")
 DATABASE_NAME = environ.get('DATABASE_NAME', "yato")
-COLLECTION_NAME = environ.get('COLLECTION_NAME', 'Telegram_files')
+COLLECTION_NAME = environ.get('COLLECTION_NAME', 'ASE_Files_2')
 
 # ============================
 # Movie Notification & Update Settings
