@@ -68,7 +68,7 @@ APPROVED = environ.get("APPROVED_WELCOME", "on").lower()
 # MongoDB Configuration
 # ============================
 DATABASE_URI = environ.get('DATABASE_URI', "mongodb+srv://KarthikMovies:KarthikUK007@cluster0.4l5byki.mongodb.net/?retryWrites=true&w=majority")
-DATABASE_URI2 = environ.get('DATABASE_URI2', " mongodb+srv://sakthirajbaskaran:gqJb3gPWMc4GqhYB@ani-tubez.ctim8nc.mongodb.net/?retryWrites=true&w=majority")
+DATABASE_URI2 = environ.get('DATABASE_URI2', "mongodb+srv://sakthirajbaskaran:gqJb3gPWMc4GqhYB@ani-tubez.ctim8nc.mongodb.net/?retryWrites=true&w=majority")
 DATABASE_NAME = environ.get('DATABASE_NAME', "multifilterbot")
 COLLECTION_NAME = environ.get('COLLECTION_NAME', 'multi_Files')
 
