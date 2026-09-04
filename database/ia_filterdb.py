@@ -251,57 +251,258 @@ def unpack_new_file_id(new_file_id):
     return file_id, file_ref
 
 
-async def send_msg(bot, filename, caption): 
+
+async def send_msg(bot, filename, caption):
+    """
+    Send a clean new-file notification to the movie update channel.
+    """
+
     try:
-        filename = re.sub(r'\(\@\S+\)|\[\@\S+\]|\b@\S+|\bwww\.\S+', '', filename).strip()
-        caption = re.sub(r'\(\@\S+\)|\[\@\S+\]|\b@\S+|\bwww\.\S+', '', caption).strip()
-        
-        year_match = re.search(r"\b(19|20)\d{2}\b", caption)
+        # ---------------------------------------------------------
+        # Clean filename and caption
+        # ---------------------------------------------------------
+
+        filename = re.sub(
+            r'\(\@\S+\)|\[\@\S+\]|\b@\S+|\bwww\.\S+',
+            '',
+            filename
+        ).strip()
+
+        caption = re.sub(
+            r'\(\@\S+\)|\[\@\S+\]|\b@\S+|\bwww\.\S+',
+            '',
+            caption or ''
+        ).strip()
+
+        # ---------------------------------------------------------
+        # Detect year
+        # ---------------------------------------------------------
+
+        year_match = re.search(
+            r"\b(19|20)\d{2}\b",
+            caption
+        )
+
         year = year_match.group(0) if year_match else None
 
-        pattern = r"(?i)(?:s|season)0*(\d{1,2})"
-        season = re.search(pattern, caption) or re.search(pattern, filename)
-        season = season.group(1) if season else None 
+        # ---------------------------------------------------------
+        # Detect season
+        # ---------------------------------------------------------
+
+        season_pattern = r"(?i)(?:s|season)\s*0*(\d{1,2})"
+
+        season_match = (
+            re.search(season_pattern, caption)
+            or re.search(season_pattern, filename)
+        )
+
+        season = (
+            season_match.group(1)
+            if season_match
+            else None
+        )
+
+        # ---------------------------------------------------------
+        # Keep a clean title
+        # ---------------------------------------------------------
 
         if year:
-            filename = filename[: filename.find(year) + 4]  
-        elif season and season in filename:
-            filename = filename[: filename.find(season) + 1]
+            filename = filename[
+                :filename.find(year) + 4
+            ]
 
-        qualities = ["ORG", "org", "hdcam", "HDCAM", "HQ", "hq", "HDRip", "hdrip", "camrip", "CAMRip", "hdtc", "predvd", "DVDscr", "dvdscr", "dvdrip", "dvdscr", "HDTC", "dvdscreen", "HDTS", "hdts"]
-        quality = await get_qualities(caption.lower(), qualities) or "HDRip"
+        elif season:
+            season_match_filename = re.search(
+                season_pattern,
+                filename
+            )
 
-        language = ""
-        possible_languages = CAPTION_LANGUAGES
-        for lang in possible_languages:
+            if season_match_filename:
+                end_position = (
+                    season_match_filename.end()
+                )
+
+                filename = filename[:end_position]
+
+        # ---------------------------------------------------------
+        # Detect quality
+        # ---------------------------------------------------------
+
+        qualities = [
+            "ORG",
+            "org",
+            "hdcam",
+            "HDCAM",
+            "HQ",
+            "hq",
+            "HDRip",
+            "hdrip",
+            "camrip",
+            "CAMRip",
+            "hdtc",
+            "predvd",
+            "DVDscr",
+            "dvdscr",
+            "dvdrip",
+            "HDTC",
+            "dvdscreen",
+            "HDTS",
+            "hdts",
+            "WEB-DL",
+            "WEBRip",
+            "WEB",
+            "BluRay",
+            "BRRip",
+            "1080p",
+            "720p",
+            "2160p",
+            "4K"
+        ]
+
+        quality = await get_qualities(
+            caption.lower(),
+            qualities
+        )
+
+        if not quality:
+            quality = "HD"
+
+        # ---------------------------------------------------------
+        # Detect language
+        # ---------------------------------------------------------
+
+        detected_languages = []
+
+        for lang in CAPTION_LANGUAGES:
+
             if lang.lower() in caption.lower():
-                language += f"{lang}, "
-        language = language[:-2] if language else "Not idea 😄"
 
-        filename = re.sub(r"[\(\)\[\]\{\}:;'\-!]", "", filename)
+                if lang not in detected_languages:
+                    detected_languages.append(lang)
 
-        text = "#𝑵𝒆𝒘_𝑭𝒊𝒍𝒆_𝑨𝒅𝒅𝒆𝒅 ✅\n\n👷𝑵𝒂𝒎𝒆: `{}`\n\n🌳𝑸𝒖𝒂𝒍𝒊𝒕𝒚: {}\n\n🍁𝑨𝒖𝒅𝒊𝒐: {}"
-        text = text.format(filename, quality, language)
+        language = (
+            ", ".join(detected_languages)
+            if detected_languages
+            else "Not specified"
+        )
+
+        # ---------------------------------------------------------
+        # Final clean filename
+        # ---------------------------------------------------------
+
+        filename = re.sub(
+            r"[\(\)\[\]\{\}:;'\-!]",
+            "",
+            filename
+        )
+
+        filename = re.sub(
+            r"\s+",
+            " ",
+            filename
+        ).strip()
+
+        # ---------------------------------------------------------
+        # Clean notification message
+        # ---------------------------------------------------------
+
+        text = (
+            "📁 <b>NEW FILE ADDED</b> ✅\n\n"
+            f"🎬 <b>{filename}</b>\n\n"
+            f"💎 <b>Quality:</b> {quality}\n"
+            f"🎙 <b>Audio:</b> {language}"
+        )
+
+        # ---------------------------------------------------------
+        # Register filename
+        # ---------------------------------------------------------
 
         if await add_name(OWNERID, filename):
-            imdb = await get_movie_details(filename)  
+
+            # -----------------------------------------------------
+            # Try to get poster
+            # -----------------------------------------------------
+
+            imdb = None
             resized_poster = None
 
-            if imdb:
-                poster_url = imdb.get('poster_url')
-                if poster_url:
-                    resized_poster = await fetch_image(poster_url)  
+            try:
+                imdb = await get_movie_details(filename)
 
-            filenames = filename.replace(" ", '-')
-            btn = [[InlineKeyboardButton('🌲 Get Files 🌲', url=f"https://telegram.me/{temp.U_NAME}?start=getfile-{filenames}")]]
-            
+                if imdb:
+
+                    poster_url = imdb.get(
+                        'poster_url'
+                    )
+
+                    if poster_url:
+                        resized_poster = await fetch_image(
+                            poster_url
+                        )
+
+            except Exception as poster_error:
+
+                logger.warning(
+                    f"Poster fetch failed: "
+                    f"{type(poster_error).__name__}: "
+                    f"{poster_error}"
+                )
+
+            # -----------------------------------------------------
+            # Deep-link filename
+            # -----------------------------------------------------
+
+            filenames = filename.replace(
+                " ",
+                "-"
+            )
+
+            # -----------------------------------------------------
+            # Get File button
+            # -----------------------------------------------------
+
+            btn = [
+                [
+                    InlineKeyboardButton(
+                        "📥 GET FILE",
+                        url=(
+                            f"https://telegram.me/"
+                            f"{temp.U_NAME}"
+                            f"?start=getfile-{filenames}"
+                        )
+                    )
+                ]
+            ]
+
+            reply_markup = InlineKeyboardMarkup(btn)
+
+            # -----------------------------------------------------
+            # Send poster + message
+            # -----------------------------------------------------
+
             if resized_poster:
-                await bot.send_photo(chat_id=MOVIE_UPDATE_CHANNEL, photo=resized_poster, caption=text, reply_markup=InlineKeyboardMarkup(btn))
-            else:              
-                await bot.send_message(chat_id=MOVIE_UPDATE_CHANNEL, text=text, reply_markup=InlineKeyboardMarkup(btn))
 
-    except:
-        pass
+                await bot.send_photo(
+                    chat_id=MOVIE_UPDATE_CHANNEL,
+                    photo=resized_poster,
+                    caption=text,
+                    reply_markup=reply_markup
+                )
+
+            else:
+
+                await bot.send_message(
+                    chat_id=MOVIE_UPDATE_CHANNEL,
+                    text=text,
+                    reply_markup=reply_markup
+                )
+
+    except Exception as e:
+
+        logger.error(
+            f"[SEND_MSG ERROR] "
+            f"{type(e).__name__}: {e}"
+    )
 
 async def get_qualities(text, qualities: list):
     """Get all Quality from text"""
