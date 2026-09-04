@@ -100,7 +100,12 @@ async def save_file(bot, media):
     else:
         logger.info(f'{getattr(media, "file_name", "NO_FILE")} is saved to database')
         if await get_status(bot.me.id):
-            await send_msg(bot, file.file_name, file.caption)
+            await send_msg(
+    bot,
+    file.file_name,
+    file.caption,
+    file.file_id
+            )
         return True, 1
 
 async def get_search_results(chat_id, query, file_type=None, max_results=10, offset=0, filter=False):
@@ -252,7 +257,7 @@ def unpack_new_file_id(new_file_id):
 
 
 
-async def send_msg(bot, filename, caption):
+async def send_msg(bot, filename, caption, file_id):
     """
     Send a clean new-file notification to the movie update channel.
     """
@@ -464,12 +469,8 @@ async def send_msg(bot, filename, caption):
             btn = [
                 [
                     InlineKeyboardButton(
-                        "📥 GET FILE",
-                        url=(
-                            f"https://telegram.me/"
-                            f"{temp.U_NAME}"
-                            f"?start=getfile-{filenames}"
-                        )
+    "📥 GET FILE",
+    url=f"https://telegram.me/{temp.U_NAME}?start=file_{file_id}"
                     )
                 ]
             ]
