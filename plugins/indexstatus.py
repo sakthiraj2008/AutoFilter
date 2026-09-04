@@ -10,12 +10,14 @@ from info import ADMINS, CHANNELS
 async def index_status(bot, message):
 
     try:
+
         if not CHANNELS:
-            return await message.reply_text(
+            await message.reply_text(
                 "📊 <b>INDEX STATUS</b>\n\n"
                 "❌ No index channels configured.",
                 parse_mode="html"
             )
+            return
 
         text = "📊 <b>INDEX STATUS</b>\n\n"
 
@@ -25,6 +27,7 @@ async def index_status(bot, message):
         for channel in CHANNELS:
 
             try:
+
                 chat = await bot.get_chat(channel)
 
                 member = await bot.get_chat_member(
@@ -40,21 +43,21 @@ async def index_status(bot, message):
 
                 status = member.status
 
-                if status in (
-                    ChatMemberStatus.ADMINISTRATOR,
-                    ChatMemberStatus.OWNER,
-                    ChatMemberStatus.MEMBER
-                ):
+                # Correct Pyrogram enum check
+                if status == ChatMemberStatus.OWNER:
+                    access = "Owner"
+                    icon = "🟢"
                     accessible += 1
 
-                    if status == ChatMemberStatus.ADMINISTRATOR:
-                        access = "Administrator"
-                    elif status == ChatMemberStatus.OWNER:
-                        access = "Owner"
-                    else:
-                        access = "Member"
-
+                elif status == ChatMemberStatus.ADMINISTRATOR:
+                    access = "Administrator"
                     icon = "🟢"
+                    accessible += 1
+
+                elif status == ChatMemberStatus.MEMBER:
+                    access = "Member"
+                    icon = "🟢"
+                    accessible += 1
 
                 else:
                     access = str(status)
@@ -91,7 +94,10 @@ async def index_status(bot, message):
 
     except Exception as e:
 
-        print(f"[INDEX STATUS ERROR] {e}")
+        print(
+            f"[INDEX STATUS ERROR] "
+            f"{type(e).__name__}: {e}"
+        )
 
         await message.reply_text(
             "❌ <b>Index Status Error</b>\n\n"
