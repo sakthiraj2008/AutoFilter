@@ -2184,6 +2184,76 @@ async def cb_handler(client: Client, query: CallbackQuery):
         )
 
     elif query.data == "about":
+
+    about_text = f"""
+<b>ℹ️ ABOUT {temp.B_NAME}</b>
+
+━━━━━━━━━━━━━━━━━━
+
+🤖 <b>Bot Name</b>
+<code>{temp.B_NAME}</code>
+
+📂 <b>Purpose</b>
+Search and get your requested files quickly from our indexed database.
+
+⚡ <b>Features</b>
+• 🔎 Fast file search
+• 📁 Automatic channel indexing
+• 📥 Easy file delivery
+• 🎬 Video & document support
+• 🌐 Multiple index channels
+• 🔐 Secure user verification
+• 🖥️ Stream support
+
+━━━━━━━━━━━━━━━━━━
+
+💡 <b>How to use</b>
+
+Simply send me the name of the movie, anime, series or file you are looking for.
+
+Example:
+
+<code>Haikyuu S03</code>
+
+I will search the indexed files and show the available results.
+
+━━━━━━━━━━━━━━━━━━
+
+❤️ <b>Powered by {temp.B_NAME}</b>
+"""
+
+    buttons = [
+        [
+            InlineKeyboardButton(
+                "🏠 HOME",
+                callback_data="start"
+            ),
+            InlineKeyboardButton(
+                "🛠 COMMANDS",
+                callback_data="help"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "📢 UPDATES",
+                url=CHNL_LNK
+            ),
+            InlineKeyboardButton(
+                "💬 SUPPORT",
+                url=SUPPORT_CHAT
+            )
+        ]
+    ]
+
+    reply_markup = InlineKeyboardMarkup(buttons)
+
+    await query.message.edit_text(
+        text=about_text,
+        reply_markup=reply_markup,
+        parse_mode=enums.ParseMode.HTML
+    )
+
+    await query.answer()
         buttons = [[
             InlineKeyboardButton('‼️ ᴅɪꜱᴄʟᴀɪᴍᴇʀ ‼️', callback_data='disclaimer'),
         ], [
