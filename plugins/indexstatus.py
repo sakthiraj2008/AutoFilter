@@ -1,22 +1,22 @@
 from pyrogram import Client, filters, enums
+from pyrogram.errors import RPCError
+
 from info import ADMINS
 from database.index_channels import get_index_channels
 from database.ia_filterdb import Media, Media2
 
 
-@Client.on_message(filters.command("indexstatus") & filters.private)
+@Client.on_message(
+    filters.command("indexstatus") &
+    filters.private &
+    filters.user(ADMINS)
+)
 async def index_status(bot, message):
 
-    # Admin check
-    if not message.from_user or message.from_user.id not in ADMINS:
-        return await message.reply_text(
-            "❌ <b>Access Denied</b>\n\n"
-            "Only bot administrators can use this command.",
-            parse_mode=enums.ParseMode.HTML
-        )
+    status_msg = None
 
     try:
-        msg = await message.reply_text(
+        status_msg = await message.reply_text(
             "⏳ <b>Checking index status...</b>",
             parse_mode=enums.ParseMode.HTML
         )
@@ -24,11 +24,12 @@ async def index_status(bot, message):
         channels = await get_index_channels()
 
         if not channels:
-            return await msg.edit_text(
+            await status_msg.edit_text(
                 "📊 <b>INDEX STATUS</b>\n\n"
                 "❌ No index channels configured.",
                 parse_mode=enums.ParseMode.HTML
             )
+            return
 
         lines = [
             "📊 <b>INDEX STATUS</b>",
@@ -36,36 +37,57 @@ async def index_status(bot, message):
             "━━━━━━━━━━━━━━━━━━"
         ]
 
+        total_files = 0
         accessible = 0
         failed = 0
-        total_files = 0
+
+        # Get bot's own ID
+        me = await bot.get_me()
+        bot_id = me.id
 
         for channel_id in channels:
 
             try:
+                # Get channel information
                 chat = await bot.get_chat(channel_id)
 
-                # Check bot access
-                try:
-                    member = await bot.get_chat_member(
-                        chat.id,
-                        bot.me.id
-                    )
-                    bot_status = str(member.status)
-                except Exception:
-                    bot_status = "Unknown"
+                # Check bot's access
+                member = await bot.get_chat_member(
+                    chat.id,
+                    bot_id
+                )
 
-                # Count files indexed from this channel
-                count1 = await Media.count_documents({
+                member_status = str(member.status)
+
+                if "OWNER" in member_status:
+                    access = "Owner"
+                    icon = "🟢"
+
+                elif "ADMINISTRATOR" in member_status:
+                    access = "Administrator"
+                    icon = "🟢"
+
+                elif "MEMBER" in member_status:
+                    access = "Member"
+                    icon = "🟡"
+
+                else:
+                    access = member_status
+                    icon = "🔴"
+
+                # Count indexed files
+                primary_count = await Media.count_documents({
                     "source_chat_id": chat.id
                 })
 
-                count2 = await Media2.count_documents({
+                secondary_count = await Media2.count_documents({
                     "source_chat_id": chat.id
                 })
 
-                count = count1 + count2
-                total_files += count
+                indexed_count = primary_count + secondary_count
+
+                total_files += indexed_count
+                accessible += 1
 
                 title = (
                     chat.title
@@ -79,14 +101,12 @@ async def index_status(bot, message):
                     else "Private"
                 )
 
-                accessible += 1
-
                 lines.append(
-                    f"🟢 <b>{title}</b>\n"
-                    f"🆔 <code>{chat.id}</code>\n"
+                    f"{icon} <b>{title}</b>\n"
+                    f"🆔 ID: <code>{chat.id}</code>\n"
                     f"👤 {username}\n"
-                    f"🔐 <b>Bot:</b> <code>{bot_status}</code>\n"
-                    f"📁 <b>Indexed:</b> {count}\n"
+                    f"🔐 Access: <b>{access}</b>\n"
+                    f"📁 Indexed Files: <b>{indexed_count}</b>\n"
                 )
 
             except Exception as e:
@@ -94,24 +114,43 @@ async def index_status(bot, message):
                 failed += 1
 
                 lines.append(
-                    f"🔴 <b>Channel Error</b>\n"
-                    f"🆔 <code>{channel_id}</code>\n"
-                    f"❌ <code>{type(e).__name__}</code>\n"
+                    "🔴 <b>CHANNEL ERROR</b>\n"
+                    f"🆔 ID: <code>{channel_id}</code>\n"
+                    f"❌ <code>{type(e).__name__}: "
+                    f"{str(e)[:150]}</code>\n"
                 )
 
         lines.extend([
             "━━━━━━━━━━━━━━━━━━",
             f"📡 <b>Total Channels:</b> {len(channels)}",
-            f"🟢 <b>Accessible:</b> {accessible}",
+            f"🟢 <b>Checked:</b> {accessible}",
             f"🔴 <b>Failed:</b> {failed}",
             f"📁 <b>Total Indexed:</b> {total_files}",
             "━━━━━━━━━━━━━━━━━━"
         ])
 
-        await msg.edit_text(
+        await status_msg.edit_text(
             "\n".join(lines),
             parse_mode=enums.ParseMode.HTML
         )
+
+    except RPCError as e:
+
+        error_text = (
+            "❌ <b>Telegram Error</b>\n\n"
+            f"<code>{type(e).__name__}: {e}</code>"
+        )
+
+        if status_msg:
+            await status_msg.edit_text(
+                error_text,
+                parse_mode=enums.ParseMode.HTML
+            )
+        else:
+            await message.reply_text(
+                error_text,
+                parse_mode=enums.ParseMode.HTML
+            )
 
     except Exception as e:
 
@@ -120,11 +159,18 @@ async def index_status(bot, message):
             f"{type(e).__name__}: {e}"
         )
 
-        try:
-            await message.reply_text(
-                "❌ <b>Index Status Error</b>\n\n"
-                f"<code>{type(e).__name__}: {e}</code>",
+        error_text = (
+            "❌ <b>Index Status Error</b>\n\n"
+            f"<code>{type(e).__name__}: {e}</code>"
+        )
+
+        if status_msg:
+            await status_msg.edit_text(
+                error_text,
                 parse_mode=enums.ParseMode.HTML
             )
-        except Exception:
-            pass
+        else:
+            await message.reply_text(
+                error_text,
+                parse_mode=enums.ParseMode.HTML
+            )
