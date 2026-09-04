@@ -2183,7 +2183,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             parse_mode=enums.ParseMode.HTML
         )
 
-        elif query.data == "about":
+    elif query.data == "about":
 
         about_text = f"""
 <b>ℹ️ ABOUT {temp.B_NAME}</b>
