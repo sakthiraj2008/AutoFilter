@@ -155,52 +155,60 @@ async def re_enable_chat(bot, message):
     await message.reply("Chat Successfully re-enabled")
 
 
-@Client.on_message(filters.command("stats") & filters.incoming)
+@Client.on_message(filters.command("stats") & filters.user(ADMINS))
 async def get_ststs(bot, message):
     try:
-        # Admin check
-        if not message.from_user or message.from_user.id not in ADMINS:
-            return await message.reply_text(
-                "❌ You are not authorized to use this command."
-            )
-
         # Initial response
-        rju = await message.reply_text("⏳ <b>Fetching stats...</b>")
+        rju = await message.reply_text(
+            "⏳ <b>Fetching stats...</b>",
+            parse_mode=enums.ParseMode.HTML
+        )
 
-        # Get statistics
+        # Total users
         total_users = await db.total_users_count()
+
+        # Total chats
         total_chats = await db.total_chat_count()
 
-        # Count indexed files
+        # Total indexed files
         files = await Media.count_documents({})
 
         # Database size
         size_bytes = await db.get_db_size()
 
-        # Your original free-space calculation
+        # Free database space
         free_bytes = max(0, 536870912 - size_bytes)
 
+        # Convert sizes
         size = get_size(size_bytes)
         free = get_size(free_bytes)
 
-        # Format status message
-        text = script.STATUS_TXT.format(
-            files,
-            total_users,
-            total_chats,
-            size,
-            free
+        # Create stats message directly
+        text = (
+            "📊 <b>BOT STATISTICS</b>\n\n"
+            "━━━━━━━━━━━━━━━━━━\n"
+            f"📁 <b>Indexed Files:</b> {files}\n"
+            f"👤 <b>Total Users:</b> {total_users}\n"
+            f"👥 <b>Total Chats:</b> {total_chats}\n"
+            "━━━━━━━━━━━━━━━━━━\n"
+            f"💾 <b>Database Used:</b> {size}\n"
+            f"🟢 <b>Database Free:</b> {free}\n"
+            "━━━━━━━━━━━━━━━━━━"
         )
 
-        await rju.edit_text(text)
+        await rju.edit_text(
+            text,
+            parse_mode=enums.ParseMode.HTML
+        )
 
     except Exception as e:
         print(f"[STATS ERROR] {type(e).__name__}: {e}")
 
         try:
             await message.reply_text(
-                f"❌ <b>Stats Error</b>\n\n"
-                f"<code>{type(e).__name__}: {e}</code>"
+                "❌ <b>Stats Error</b>\n\n"
+                f"<code>{type(e).__name__}: {e}</code>",
+                parse_mode=enums.ParseMode.HTML
             )
         except Exception as reply_error:
             print(f"[STATS REPLY ERROR] {reply_error}")
