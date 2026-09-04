@@ -2183,9 +2183,9 @@ async def cb_handler(client: Client, query: CallbackQuery):
             parse_mode=enums.ParseMode.HTML
         )
 
-    elif query.data == "about":
+        elif query.data == "about":
 
-    about_text = f"""
+        about_text = f"""
 <b>ℹ️ ABOUT {temp.B_NAME}</b>
 
 ━━━━━━━━━━━━━━━━━━
@@ -2222,45 +2222,52 @@ I will search the indexed files and show the available results.
 ❤️ <b>Powered by {temp.B_NAME}</b>
 """
 
-    buttons = [
-        [
-            InlineKeyboardButton(
-                "🏠 HOME",
-                callback_data="start"
-            ),
-            InlineKeyboardButton(
-                "🛠 COMMANDS",
-                callback_data="help"
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                "📢 UPDATES",
-                url=CHNL_LNK
-            ),
-            InlineKeyboardButton(
-                "💬 SUPPORT",
-                url=SUPPORT_CHAT
-            )
+        buttons = [
+            [
+                InlineKeyboardButton(
+                    "🏠 HOME",
+                    callback_data="start"
+                ),
+                InlineKeyboardButton(
+                    "🛠 COMMANDS",
+                    callback_data="help"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "📢 UPDATES",
+                    url=CHNL_LNK
+                ),
+                InlineKeyboardButton(
+                    "💬 SUPPORT",
+                    url=SUPPORT_CHAT
+                )
+            ]
         ]
-    ]
 
-    reply_markup = InlineKeyboardMarkup(buttons)
+        reply_markup = InlineKeyboardMarkup(buttons)
 
-    await query.message.edit_text(
-        text=about_text,
-        reply_markup=reply_markup,
-        parse_mode=enums.ParseMode.HTML
-    )
+        await query.message.edit_text(
+            text=about_text,
+            reply_markup=reply_markup,
+            parse_mode=enums.ParseMode.HTML
+        )
 
-    await query.answer()
-        
+        await query.answer()
+
     elif query.data == "source":
         buttons = [[
-            InlineKeyboardButton('sᴏᴜʀᴄᴇ ᴄᴏᴅᴇ 📜', url='https://github.com/codeflix-bots/autofilter.git'),
-            InlineKeyboardButton('⇋ ʙᴀᴄᴋ ⇋', callback_data='about')
+            InlineKeyboardButton(
+                'sᴏᴜʀᴄᴇ ᴄᴏᴅᴇ 📜',
+                url='https://github.com/codeflix-bots/autofilter.git'
+            ),
+            InlineKeyboardButton(
+                '⇋ ʙᴀᴄᴋ ⇋',
+                callback_data='about'
+            )
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
+
         await query.message.edit_text(
             text=script.SOURCE_TXT,
             reply_markup=reply_markup,
